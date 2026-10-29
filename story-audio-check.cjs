@@ -27,3 +27,5 @@ player.setScene('classic','');const count=spoken.length;player.play();assert.equ
 const unsupported=createStoryNarrator({onState:s=>states.push(s)});unsupported.setScene('x','故事。');unsupported.play();assert.equal(unsupported.getState().available,false);
 console.log('PASS: 59 scripts; speech sequencing, voice/rate, pause/resume, stale events, stop, scene change, same-scene rendering, errors, unsupported browser.');
 `,ctx);
+
+vm.runInContext(`player.setScene("english", "A。apple。");player.configure(null,.7,"en-US");player.play();assert.equal(spoken.at(-1).lang,"en-US");player.stop();player.configure(null,.85);player.setScene("chinese","中文。");player.play();assert.equal(spoken.at(-1).lang,"zh-TW");player.stop();`,ctx);

@@ -1,0 +1,22 @@
+ 'use strict';
+// Example syllables show where the target symbol occurs; they are not isolated symbol pronunciations.
+const ZHUYIN_WORDS=[
+['ㄅ','杯子','ㄅㄟ','杯','cup'],['ㄆ','蘋果','ㄆㄧㄥˊ','蘋','A'],['ㄇ','貓咪','ㄇㄠ','貓','C'],['ㄈ','帆船','ㄈㄢˊ','帆','Y'],['ㄉ','蛋','ㄉㄢˋ','蛋','E'],['ㄊ','太陽','ㄊㄞˋ','太','S'],['ㄋ','鳥','ㄋㄧㄠˇ','鳥','bird'],['ㄌ','梨子','ㄌㄧˊ','梨','P'],['ㄍ','狗','ㄍㄡˇ','狗','D'],['ㄎ','蝌蚪','ㄎㄜ','蝌','tadpole'],['ㄏ','花','ㄏㄨㄚ','花','flower'],['ㄐ','雞','ㄐㄧ','雞','chicken'],['ㄑ','氣球','ㄑㄧˋ','氣','balloon'],['ㄒ','西瓜','ㄒㄧ','西','melon'],['ㄓ','蜘蛛','ㄓ','蜘','spider'],['ㄔ','車','ㄔㄜ','車','car'],['ㄕ','樹','ㄕㄨˋ','樹','T'],['ㄖ','日','ㄖˋ','日','S'],['ㄗ','紫葡萄','ㄗˇ','紫','G'],['ㄘ','草','ㄘㄠˇ','草','grass'],['ㄙ','傘','ㄙㄢˇ','傘','U'],['ㄚ','鴨','ㄧㄚ','鴨','duck'],['ㄛ','喔，原來如此','ㄛ','喔','idea'],['ㄜ','鵝','ㄜˊ','鵝','goose'],['ㄝ','葉子','ㄧㄝˋ','葉','L'],['ㄞ','愛心','ㄞˋ','愛','heart'],['ㄟ','杯子','ㄅㄟ','杯','cup'],['ㄠ','貓咪','ㄇㄠ','貓','C'],['ㄡ','狗','ㄍㄡˇ','狗','D'],['ㄢ','傘','ㄙㄢˇ','傘','U'],['ㄣ','門','ㄇㄣˊ','門','door'],['ㄤ','糖果','ㄊㄤˊ','糖','candy'],['ㄥ','風箏','ㄈㄥ','風','K'],['ㄦ','耳朵','ㄦˇ','耳','ear'],['ㄧ','衣服','ㄧ','衣','shirt'],['ㄨ','屋子','ㄨ','屋','H'],['ㄩ','魚','ㄩˊ','魚','F']
+].map(([symbol,word,syllable,character,icon],i)=>({symbol,word,syllable,character,icon,index:i+1,group:i<21?'聲符':i<34?'韻符':'介符'}));
+function createZhuyinScenes(){
+ const base=createAlphabetScenes(),E=(x,y,a,b,n)=>R(ellipse(x,y,a,b),n,x,y),Q=(x,y,w,h,n)=>R(rect(x,y,w,h,7),n,x+w/2,y+h/2),P=(d,n,x,y)=>R(path(d),n,x,y);
+ const birds=(long=false)=>[R(ellipse(350,260,68,40),1,372,280),P(`M375 252Q${long?330:360} 170 387 158L410 169Q384 213 403 253Z`,1,389,210),E(394,160,28,28,1),P('M418 154L447 170L418 178Z',2,430,167),E(333,255,32,21,5)];
+ const icons={cup:[P('M392 175C463 155 463 260 391 244V223C435 234 433 182 392 199Z',2,432,211),Q(288,160,108,144,3)],bird:birds(),duck:birds(),goose:birds(true),chicken:[...birds(),E(384,127,12,16,2),E(405,125,12,16,2)],tadpole:[P('M355 231Q440 215 434 137Q480 259 365 272Z',3,419,228),E(333,257,48,37,6)],flower:[...[[350,151],[395,187],[378,238],[321,238],[305,187]].map(([x,y])=>E(x,y,29,29,5)),Q(343,259,14,70,4),E(350,198,27,27,1)],balloon:[E(350,200,64,78,5),P('M350 277L336 296H364Z',2,350,289)],melon:[P('M273 175H435Q352 372 273 175Z',4,352,273),P('M285 175H423Q352 337 285 175Z',2,352,223)],spider:[...[[289,168],[412,168],[280,207],[420,207],[280,254],[420,254],[296,289],[405,289]].map(([x,y])=>E(x,y,12,17,6)),E(350,238,53,51,5),E(350,178,38,31,1)],car:[Q(280,214,151,67,2),P('M302 214L322 168H389L410 214Z',3,355,193),E(312,284,24,24,6),E(404,284,24,24,6)],grass:[P('M282 315Q251 224 285 182L323 279Q295 166 342 132L363 272Q394 170 426 180L401 316Z',4,353,290)],idea:[E(350,194,65,66,1),Q(326,257,48,28,6),Q(332,292,36,16,2)],heart:[P('M350 296C205 210 301 108 350 180C404 102 498 213 350 296Z',5,350,226)],door:[R(rect(288,135,128,188,7),6,296,230),Q(304,153,96,170,1),E(380,241,10,10,2)],candy:[P('M309 201L269 172V279L310 253Z',5,285,227),P('M394 201L434 172V279L391 253Z',5,420,227),Q(306,183,89,92,2)],ear:[P('M307 180C310 112 415 120 415 192C415 245 367 241 365 285C357 331 292 309 316 266L330 247C360 222 302 225 307 180Z',2,386,186)],shirt:[P('M319 146L275 173L285 227L312 215V310H398V215L425 227L439 173L393 146Q351 181 319 146Z',3,350,239)]};
+ return ZHUYIN_WORDS.map(z=>{
+ const source=base.find(s=>s.alphabet.letter===z.icon);
+ const glyph=`<rect x="30" y="65" width="195" height="265" fill="transparent" stroke="none" pointer-events="all"/><text class="zhuyin-glyph" x="36" y="267" style="font:700 180px 'Microsoft JhengHei','PingFang TC','Noto Sans CJK TC',sans-serif">${z.symbol}</text>`;
+ const regions=[R(rect(12,12,476,396,14),3,465,375),R(glyph,1,125,325),...(source?source.regions.slice(3).map(r=>({...r})):icons[z.icon])];
+ let lines=source?source.lines:'<path d="M239 65V365" stroke-dasharray="5 9"/>';
+ if(['bird','duck','goose','chicken'].includes(z.icon))lines+='<circle cx="400" cy="154" r="4" fill="#505b4d"/>';
+ if(z.icon==='spider')lines+='<path d="M320 208l-31-40M313 220l-33-13M308 247l-28 7M321 270l-25 19M380 208l32-40M388 220l32-13M392 247l28 7M379 270l26 19"/>';
+ if(z.icon==='balloon')lines+='<path d="M350 296q-29 22 0 47"/>';
+ if(z.icon==='melon')lines+='<path d="M319 194l5 9M350 208v10M385 194l-5 9"/>';
+ if(z.icon==='ear')lines+='<path d="M332 184q12-40 44-6q15 25-15 47"/>';
+ return {id:'zhuyin-'+z.index,name:`${z.symbol} · ${z.word}`,category:'zhuyin',zhuyin:z,story:`一起認識「${z.symbol}」！看看${z.word}的圖案，替注音符號和圖畫填色，再讀一讀例字。`,desc:`注音 ${z.index} / 37 · ${z.group} · ${regions.length} 個色塊`,regions,lines};
+ });
+}

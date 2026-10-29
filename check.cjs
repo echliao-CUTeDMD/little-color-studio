@@ -8,10 +8,12 @@ vm.runInContext(fs.readFileSync(__dirname+'/filial.js','utf8'),context);
 vm.runInContext(fs.readFileSync(__dirname+'/story-audio.js','utf8'),context);
 vm.runInContext(fs.readFileSync(__dirname+'/photo.js','utf8'),context);
 vm.runInContext(fs.readFileSync(__dirname+'/poems.js','utf8'),context);
+vm.runInContext(fs.readFileSync(__dirname+'/alphabet.js','utf8'),context);
+vm.runInContext(fs.readFileSync(__dirname+'/zhuyin.js','utf8'),context);
 vm.runInContext(fs.readFileSync(__dirname+'/app.js','utf8'),context);
 vm.runInContext(`
-assert.equal(SCENES.length,89);
-assert.equal(new Set(SCENES.map(s=>s.id)).size,89);
+assert.equal(SCENES.length,152);
+assert.equal(new Set(SCENES.map(s=>s.id)).size,152);
 assert.equal(SCENES.filter(s=>s.category==='poem').length,30);
 assert.equal(new Set(TANG_POEMS.map(p=>p.title)).size,30);
 assert(TANG_POEMS.every(p=>[4,6,8].includes(p.lines.length)&&p.lines.every(line=>[5,7].includes([...line].length))&&p.author&&p.meaning&&p.source.startsWith('https://zh.wikisource.org/wiki/')));
@@ -20,15 +22,25 @@ assert.equal(TANG_POEMS.find(p=>p.key==='mother').lines.length,6);
 assert.deepEqual(TANG_POEMS.map(p=>p.key),['quiet','spring','tower','deer','bamboo','beans','plum','farewell','jiande','snow','hermit','sunset','stove','autumn-night','remaining-snow','monk','qin','mother','grass','farm','mountain-autumn','sea-moon','brothers','hibiscus','yellow-crane','baidi','maple','west-stream','swallows','peach-stream']);
 assert.deepEqual(SCENES.slice(3,15).map(s=>s.name.split('・')[0]),['鼠','牛','虎','兔','龍','蛇','馬','羊','猴','雞','狗','豬']);
 assert.equal(SCENES.filter(s=>s.category==='fairytale').length,20);
-assert(SCENES.slice(15).every(s=>s.story&&s.regions.length>=10));
+assert(SCENES.slice(15,89).every(s=>s.story&&s.regions.length>=10));
 assert.equal(SCENES.filter(s=>s.category==='filial').length,24);
 assert(SCENES.filter(s=>s.category==='filial').every(s=>FILIAL_NARRATIONS[s.id.slice(7)]?.length>100));
 assert.equal(Object.keys(OTHER_NARRATIONS).length,35);
 assert(SCENES.every(s=>getStoryNarration(s).length>80));
-assert.equal(new Set(SCENES.map(s=>getStoryNarration(s))).size,89);
+assert.equal(new Set(SCENES.map(s=>getStoryNarration(s))).size,152);
 assert.equal(new Set(SCENES.slice(35,59).map(s=>s.name)).size,24);
 assert.deepEqual(SCENES.slice(35,59).map(s=>s.name),['孝感動天','親嘗湯藥','齧指痛心','單衣順母','負米養親','賣身葬父','鹿乳奉親','行傭供母','懷橘遺親','乳姑不怠','恣蚊飽血','臥冰求鯉','為母埋兒','扼虎救父','棄官尋母','嘗糞憂心','戲彩娛親','拾葚供親','扇枕溫衾','湧泉躍鯉','聞雷泣墓','刻木事親','哭竹生筍','滌親溺器']);
-assert.equal(current,59);
+assert.equal(SCENES.filter(s=>s.zhuyin).length,37);
+assert.equal(ZHUYIN_WORDS.map(z=>z.symbol).join(''),'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦㄧㄨㄩ');
+assert(ZHUYIN_WORDS.every(z=>z.syllable.includes(z.symbol)));
+selectCollection('zhuyin');assert.equal(current,115);assert.equal($('zhuyin-panel').hidden,false);assert($('zhuyin-syllable').innerHTML.includes('<mark>ㄅ</mark>'));assert($('story-full-text').textContent.includes('杯子'));
+assert.equal(SCENES.filter(s=>s.alphabet).length,26);
+assert.equal(ALPHABET_WORDS.map(a=>a.letter).join(''),'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+selectCollection('alphabet');assert.equal(current,89);
+assert($('story-full-text').textContent.includes('A is for apple'));
+assert(svgFor(SCENES[current],fills[current],true).includes('class="region-number"'));
+assert(svgFor(SCENES[current],fills[current],true).includes('class="alphabet-glyph"'));
+selectCollection('poem');assert.equal(current,59);
 assert.equal($('poem-panel').hidden,false);
 assert.equal($('poem-author').textContent,'唐 · 李白');
 assert($('poem-lines').textContent.includes('床前明月光'));
@@ -46,7 +58,7 @@ $('confirm-reset').onclick();assert(fills[0].every(x=>x===null));
 $('undo').onclick();assert.equal(fills[0][0],COLORS[1][1]);
 setMode('number');
 for(current=0;current<SCENES.length;current++){for(let i=0;i<SCENES[current].regions.length;i++){selected=SCENES[current].regions[i].n;paint(i)}assert(fills[current].every(Boolean));assert.equal($('progress-percent').textContent,'100%')}
-assert.equal(Object.keys(JSON.parse(localStorage.getItem('little-color-v1'))).length,89);
+assert.equal(Object.keys(JSON.parse(localStorage.getItem('little-color-v1'))).length,152);
 selectCollection('classic');assert.equal(current,0);
 selectCollection('zodiac');assert.equal(current,3);
 selectCollection('fairytale');assert.equal(current,15);
@@ -65,7 +77,7 @@ for(const [category,count] of [['classic',3],['zodiac',12],['fairytale',20],['fi
  assert.equal($('story-full-text').textContent,getStoryNarration(SCENES[current]));
  assert(fills[current].every(Boolean),'Switching categories must preserve completed art');
 }
-console.log('PASS: 89 scenes including 24 filial stories; '+SCENES.reduce((sum,s)=>sum+s.regions.length,0)+' regions; number validation, free coloring, undo, reset, completion, save, collection switching.');
+console.log('PASS: 152 scenes including 24 filial stories; '+SCENES.reduce((sum,s)=>sum+s.regions.length,0)+' regions; number validation, free coloring, undo, reset, completion, save, collection switching.');
 let queued=null,latest=null;
 const narrator=createStoryNarrator({synth:{cancel(){queued=null},speak(u){queued=u}},Utterance:class {constructor(text){this.text=text}},onState:s=>latest=s});
 for(current=0;current<SCENES.length;current++){
@@ -75,19 +87,19 @@ for(current=0;current<SCENES.length;current++){
  while(latest.state==='playing'){assert(queued.text.length>0);const next=queued;queued=null;next.onend();assert(++sentences<40)}
  assert(sentences>=4);assert.equal(latest.state,'idle');
 }
-console.log('PASS: all 89 scenes expose matching narration and complete simulated sentence playback.');
+console.log('PASS: all 152 scenes expose matching narration and complete simulated sentence playback.');
 const originalIds=SCENES.map(s=>s.id).join(',');
 const photoModel={version:1,columns:3,rows:3,palette:['#123456','#fedcba'],cells:[1,2,1,2,1,2,1,2,1]};
-installPhoto(photoModel);assert.equal(SCENES.length,90);assert.equal(current,89);
+installPhoto(photoModel);assert.equal(SCENES.length,153);assert.equal(current,152);
 assert.equal(document.querySelectorAll('.scene-card').filter(b=>!b.hidden).length,1);
 assert.equal(document.querySelectorAll('.swatch').length,2);assert.equal($('photo-reference').hidden,false);
-selected=2;paint(0);assert.equal(fills[89][0],null);selected=1;paint(0);assert.equal(fills[89][0],'#123456');
-$('undo').onclick();assert.equal(fills[89][0],null);paint(0);
+selected=2;paint(0);assert.equal(fills[152][0],null);selected=1;paint(0);assert.equal(fills[152][0],'#123456');
+$('undo').onclick();assert.equal(fills[152][0],null);paint(0);
 assert.equal(loadPhotoRecord().fills[0],'#123456');
 selectCollection('classic');assert.equal(activeColors(),COLORS);assert.equal($('photo-reference').hidden,true);
-selectCollection('photo');assert.equal(fills[89][0],'#123456');
-installPhoto({...photoModel,palette:['#000000'],cells:Array(9).fill(1)});assert.equal(SCENES.length,90);assert(fills[89].every(c=>c===null));assert.equal(histories[89].length,0);
-assert.equal(SCENES.slice(0,89).map(s=>s.id).join(','),originalIds);
+selectCollection('photo');assert.equal(fills[152][0],'#123456');
+installPhoto({...photoModel,palette:['#000000'],cells:Array(9).fill(1)});assert.equal(SCENES.length,153);assert(fills[152].every(c=>c===null));assert.equal(histories[152].length,0);
+assert.equal(SCENES.slice(0,152).map(s=>s.id).join(','),originalIds);
 for(let i=0;i<9;i++)paint(i);assert.equal($('progress-percent').textContent,'100%');
 console.log('PASS: custom palette, photo selection, hints/number validation, undo, save, replacement, original artwork preservation, completion.');
 `,context);

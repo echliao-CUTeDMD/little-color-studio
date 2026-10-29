@@ -65,20 +65,20 @@ const OTHER_NARRATIONS={
  'tale-thumbelina':'拇指姑娘小得像一根拇指，誕生在美麗的花朵裡。她在旅途中遇見不同的動物，有些帶來幫助，有些卻想替她決定生活。拇指姑娘努力尋找自己喜歡的世界，最後來到陽光和花朵之間。替花瓣、葉子與蝴蝶加上顏色吧。身體小小的，也可以有自己的想法；每個人的聲音，都應該被認真聆聽。',
  'tale-snow-queen':'凱與格爾達原本是好朋友，卻因魔法而分離。格爾達踏上漫長的旅程，穿過不同的地方，也得到許多人的幫助，終於來到冰雪女王的宮殿。她對朋友的真心，帶來融化寒冷的力量。看看畫中的冰晶和高塔，用顏色畫出清亮的冬天。這個故事讓我們記得，面對困難時，友誼、耐心和彼此幫忙，都能帶來希望。'
 };
-function getStoryNarration(scene,poemOnly=false){if(scene.poem){const p=scene.poem;return `作者，${p.author}。${p.lines.join('。')}。`+(poemOnly?'':`白話解說。${p.meaning}${p.prompt}`)}if(scene.category==='photo')return '這是你自己選擇的照片，現在變成一張小小的像素填色圖。先打開配色參考圖，看看不同顏色的位置，再挑一個號碼開始。每填好一塊，照片就會慢慢出現。你也可以選擇自由配色，替回憶換上新的顏色。這張照片讓你想到誰，或想起哪件開心的事情呢？可以和身邊的人分享，說出屬於你自己的故事。';return scene.category==='filial'?FILIAL_NARRATIONS[scene.id.slice(7)]||'':OTHER_NARRATIONS[scene.id]||''}
+function getStoryNarration(scene,poemOnly=false){if(scene.zhuyin){const z=scene.zhuyin;return `第${z.index}張注音圖。${z.word}。一起說，${z.word}。這張圖畫要學的注音符號，在例字的完整注音裡用亮色標示。先看一看它的形狀，再替符號和圖案選顏色。慢慢塗，不用急。填好之後，可以請身邊的大人陪你讀例字，找找今天學的符號，再想一想，還有哪些字也會用到它呢？`}if(scene.alphabet){const a=scene.alphabet;return `${a.letter}。${a.word}。${a.letter} is for ${a.word}。Say it with me。${a.letter}。${a.word}。Can you find the uppercase letter and the lowercase letter?。Color the letters and the picture。`}if(scene.poem){const p=scene.poem;return `作者，${p.author}。${p.lines.join('。')}。`+(poemOnly?'':`白話解說。${p.meaning}${p.prompt}`)}if(scene.category==='photo')return '這是你自己選擇的照片，現在變成一張小小的像素填色圖。先打開配色參考圖，看看不同顏色的位置，再挑一個號碼開始。每填好一塊，照片就會慢慢出現。你也可以選擇自由配色，替回憶換上新的顏色。這張照片讓你想到誰，或想起哪件開心的事情呢？可以和身邊的人分享，說出屬於你自己的故事。';return scene.category==='filial'?FILIAL_NARRATIONS[scene.id.slice(7)]||'':OTHER_NARRATIONS[scene.id]||''}
 
 // A cancelled sentence is repeated on resume, avoiding platform-specific pause bugs.
 function createStoryNarrator({synth,Utterance,onState}){
- let sceneId=null,text='',parts=[],index=0,state='idle',generation=0,voice=null,rate=.85,active=null;
+ let sceneId=null,text='',parts=[],index=0,state='idle',generation=0,voice=null,rate=.85,lang='zh-TW',active=null;
  const available=!!(synth&&Utterance);
  const emit=(message='')=>onState({state,available,index,total:parts.length,message});
  function cancel(){generation++;if(available)synth.cancel();active=null}
  function stop(){cancel();state='idle';index=0;emit()}
  function speak(){
   if(index>=parts.length){state='idle';active=null;index=0;emit('故事說完了，繼續享受填色吧！');return}
-  const token=generation;active=new Utterance(parts[index]);active.lang='zh-TW';active.rate=rate;active.pitch=1;active.volume=1;if(voice)active.voice=voice;
+  const token=generation;active=new Utterance(parts[index]);active.lang=lang;active.rate=rate;active.pitch=1;active.volume=1;if(voice)active.voice=voice;
   active.onend=()=>{if(token!==generation||state!=='playing')return;index++;speak()};
-  active.onerror=e=>{if(token!==generation)return;cancel();state='idle';index=0;emit(e.error==='not-allowed'?'播放未獲允許，請再按一次「聽故事」。':'語音播放失敗，請選擇中文聲音再試一次，或閱讀故事文字。')};
+  active.onerror=e=>{if(token!==generation)return;cancel();state='idle';index=0;emit(e.error==='not-allowed'?'播放未獲允許，請再按一次「聽故事」。':'語音播放失敗，請選擇對應語言的聲音再試一次，或閱讀故事文字。')};
   emit();try{synth.speak(active)}catch{cancel();state='idle';emit('這台裝置暫時無法播放語音，仍可閱讀故事文字。')}
  }
  return {
@@ -86,29 +86,29 @@ function createStoryNarrator({synth,Utterance,onState}){
   play(){if(!available||!text)return;cancel();index=0;state='playing';speak()},
   togglePause(){if(state==='playing'){cancel();state='paused';emit('已暫停。繼續時會從這一句重新說起。')}else if(state==='paused'){state='playing';speak()}},
   stop,
-  configure(nextVoice,nextRate){voice=nextVoice;rate=nextRate;if(state==='playing'){cancel();speak()}},
+  configure(nextVoice,nextRate,nextLang='zh-TW'){lang=nextLang;voice=nextVoice;rate=nextRate;if(state==='playing'){cancel();speak()}},
   getState(){return {state,index,total:parts.length,available}}
  };
 }
 
 function setupStoryAudio(getScene){
  const el=id=>document.getElementById(id),synth=globalThis.speechSynthesis;
- let voices=[];
+ let voices=[],voiceLanguage='';
  const player=createStoryNarrator({synth,Utterance:globalThis.SpeechSynthesisUtterance,onState:({state,available,index,total,message})=>{
   el('story-play').disabled=!available;
-  el('story-play').textContent=state==='idle'?(getScene().poem?'▶ 聽唐詩':'▶ 聽故事'):'↻ 從頭聽';
+  el('story-play').textContent=state==='idle'?(getScene().zhuyin?'▶ 聽例詞':getScene().alphabet?'▶ 聽英文':getScene().poem?'▶ 聽唐詩':'▶ 聽故事'):'↻ 從頭聽';
   el('story-pause').disabled=state==='idle'||!available;
   el('story-pause').textContent=state==='paused'?'▶ 繼續':'Ⅱ 暫停';
   el('story-stop').disabled=state==='idle'||!available;
   el('story-audio-status').textContent=!available?'此瀏覽器不支援語音朗讀，可展開故事文字閱讀。':message||(state==='playing'?`正在說故事 · 第 ${index+1} / ${total} 句`:state==='paused'?'已暫停':'按播放按鈕，一邊聽、一邊填色。');
  }});
- function settings(){player.configure(voices.find(v=>v.voiceURI===el('story-voice').value)||null,Number(el('story-rate').value)||.85)}
+ function settings(){player.configure(voices.find(v=>v.voiceURI===el('story-voice').value)||null,Number(el('story-rate').value)||.85,getScene().alphabet?'en-US':'zh-TW')}
  function loadVoices(){
   if(!synth)return;
   const selected=el('story-voice').value;
-  voices=synth.getVoices().filter(v=>/^zh(?:[-_]|$)/i.test(v.lang)).sort((a,b)=>Number(/^zh[-_]TW$/i.test(b.lang))-Number(/^zh[-_]TW$/i.test(a.lang)));
+  voices=synth.getVoices().filter(v=>(getScene().alphabet?/^en(?:[-_]|$)/i:/^zh(?:[-_]|$)/i).test(v.lang)).sort((a,b)=>Number(/^zh[-_]TW$/i.test(b.lang))-Number(/^zh[-_]TW$/i.test(a.lang)));
   el('story-voice').replaceChildren();
-  const option=document.createElement('option');option.value='';option.textContent='裝置預設中文聲音';el('story-voice').append(option);
+  const option=document.createElement('option');option.value='';option.textContent=getScene().alphabet?'裝置預設英文聲音':'裝置預設中文聲音';el('story-voice').append(option);
   voices.forEach(v=>{const opt=document.createElement('option');opt.value=v.voiceURI;opt.textContent=`${v.name}（${v.lang}）`;el('story-voice').append(opt)});
   el('story-voice').value=voices.some(v=>v.voiceURI===selected)?selected:(voices[0]?.voiceURI||'');settings();
  }
@@ -116,7 +116,7 @@ function setupStoryAudio(getScene){
  el('story-rate').onchange=settings;el('story-voice').onchange=settings;
  if(synth){loadVoices();synth.addEventListener('voiceschanged',loadVoices)}
  globalThis.addEventListener('pagehide',()=>player.stop());
- function sync(){const s=getScene(),only=el('poem-reading-mode').value==='poem',body=getStoryNarration(s,only);el('poem-reading-label').hidden=!s.poem;el('story-audio').hidden=!body;el('story-full-text').textContent=body||'';player.setScene(s.id+(s.poem?(only?':poem':':full'):''),body?`${s.id==='poem-deer'?'鹿寨':s.name}。${body.replaceAll('返景','返影').replaceAll('泠泠','玲玲')}`:'')}
+ function sync(){const s=getScene();const language=s.alphabet?'en':'zh';if(voiceLanguage!==language){player.stop();voiceLanguage=language;loadVoices()}const only=el('poem-reading-mode').value==='poem',body=getStoryNarration(s,only);el('poem-reading-label').hidden=!s.poem;el('story-audio').hidden=!body;el('story-full-text').textContent=body||'';player.setScene(s.id+(s.poem?(only?':poem':':full'):''),body?(s.alphabet||s.zhuyin?body:`${s.id==='poem-deer'?'鹿寨':s.name}。${body.replaceAll('返景','返影').replaceAll('泠泠','玲玲')}`):'')}
  el('poem-reading-mode').onchange=sync;
  return {sync};
 }
